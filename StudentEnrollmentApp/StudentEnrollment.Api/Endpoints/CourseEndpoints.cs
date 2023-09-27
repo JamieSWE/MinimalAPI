@@ -20,21 +20,25 @@ public static class CourseEndpoints
         .WithOpenApi()
         .Produces<List<CourseDto>>(StatusCodes.Status200OK);
 
-        group.MapGet("/{id}", async (int id, StudentEnrollmentDbContext db) =>
+        group.MapGet("/{id}", async (int id, StudentEnrollmentDbContext db, IMapper mapper) =>
         {
-            return await db.Courses.FindAsync(id) is Course course ? Results.Ok(course) : Results.NotFound();
+            return await db.Courses.FindAsync(id)
+               is Course course
+               ? Results.Ok(mapper.Map<CourseDto>(course))
+               : Results.NotFound();
         })
         .WithName("GetCourseById")
         .WithOpenApi()
-        .Produces<Course>(StatusCodes.Status200OK)
+        .Produces<CourseDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        group.MapPut("/{id}", async (int id, CourseDto course, StudentEnrollmentDbContext db) =>
+        group.MapPut("/{id}", async (int id, CourseDto courseDto, StudentEnrollmentDbContext db, IMapper mapper) =>
         {
-            var recordExists = await db.Courses.AnyAsync(r => r.Id == id);
-            if (!recordExists) return Results.NotFound();
+            var foundModel = await db.Courses.FindAsync(id);
+            if (foundModel is null) return Results.NotFound();
 
-            db.Update(course);
+            mapper.Map(courseDto, foundModel);
+            //db.Update(courseDto);
             await db.SaveChangesAsync();
 
             return Results.NoContent();
@@ -58,13 +62,13 @@ public static class CourseEndpoints
 
         group.MapDelete("/{id}", async (int id, StudentEnrollmentDbContext db) =>
         {
-            var record = await db.Courses.FindAsync(id);
-            if (record == null) return Results.NotFound();
-
-            db.Remove(record);
-            await db.SaveChangesAsync();
-
-            return Results.NoContent();
+            if (await db.Courses.FindAsync(id) is Course course)
+            {
+                db.Courses.Remove(course);
+                await db.SaveChangesAsync();
+                return Results.Ok(course);
+            }
+            return Results.NotFound();
         })
         .WithName("DeleteCourse")
         .WithOpenApi()
