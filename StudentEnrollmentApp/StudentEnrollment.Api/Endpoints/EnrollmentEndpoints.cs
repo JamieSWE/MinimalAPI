@@ -75,4 +75,5 @@ public static class EnrollmentEndpoints
         .Produces<Enrollment>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
     }
+
 }
