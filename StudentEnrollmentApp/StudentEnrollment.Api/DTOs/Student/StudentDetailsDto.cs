@@ -1,8 +1,8 @@
-﻿using StudentEnrollment.Api.DTOs.Enrollment;
+﻿using StudentEnrollment.Api.DTOs.Course;
 
 namespace StudentEnrollment.Api.DTOs.Student;
 
 public class StudentDetailsDto : CreateStudentDto
 {
-    public List<EnrollmentDto> Enrollments { get; set; } = new List<EnrollmentDto>();
+    public List<CourseDto> Courses { get; set; } = new List<CourseDto>();
 }
